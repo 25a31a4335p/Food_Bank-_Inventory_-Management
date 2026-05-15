@@ -1,25 +1,56 @@
-# Food Bank Inventory Management
+# Food Bank Inventory Management System
 
-A C++ application designed to efficiently manage donated food items in food banks. This system provides real-time inventory tracking, expiry date monitoring, and intelligent alerts to minimize food wastage and optimize distribution.
+A C++ console-based application designed to help food banks manage food donations, track inventory, monitor expiry dates using priority queues, and generate alerts for soon-to-expire food items.
 
-## Overview
+## Project Overview
 
-Food Bank Inventory Management is a robust command-line application that leverages priority queue data structures to manage food inventory effectively. It helps food banks track donated items, monitor expiry dates, and generate timely alerts for items nearing expiration.
+Food banks receive many donations daily, and managing these items manually can be difficult. This project provides a simple inventory management system that allows users to:
+
+- Add donated food items
+- Store item quantity and expiry date
+- Track items based on expiry date
+- Generate alerts for soon-to-expire food
+- Remove expired or distributed items
+- Display current inventory
+
+The system uses a **priority queue** to prioritize food items that expire soonest.
 
 ## Features
 
-- **Food Item Management**: Add, update, and remove food items from inventory
-- **Priority Queue Organization**: Items are prioritized based on expiry dates for efficient distribution
-- **Expiry Date Tracking**: Real-time monitoring of food items' expiry dates
-- **Alert System**: Automated alerts for items approaching expiration (configurable threshold)
-- **Inventory Reports**: Generate comprehensive inventory reports
-- **Quantity Management**: Track available quantities of each food item
-- **Food Waste Reduction**: Helps minimize food wastage by prioritizing distribution of items nearing expiration
+- Add new food donations
+- View all inventory items
+- Track expiry dates
+- Alert users about soon-to-expire items
+- Remove expired items
+- Search food items by name
+- Update item quantity
+- Priority queue implementation for expiry tracking
 
-## Tech Stack
+## Technologies Used
 
-- **Language**: C++
-- **Data Structure**: Priority Queue
-- **Compilation**: Standard C++ compiler (C++11 or later)
+- C++
+- Standard Template Library
+- Priority Queue
+- Object-Oriented Programming
+- Console-based interface
+
+## Data Structures Used
+
+### Priority Queue
+
+A priority queue is used to store food items according to their expiry dates.
+
+Items with the earliest expiry date have the highest priority, so they can be distributed first.
+
+### Vector
+
+A vector is used to store the general inventory list.
 
 ## Project Structure
+
+```text
+Food-Bank-Inventory-Management/
+│
+├── main.cpp
+├── README.md
+└── screenshots/
