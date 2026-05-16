@@ -1,384 +1,453 @@
 #include <iostream>
 #include <vector>
 #include <queue>
-#include <string>
-#include <algorithm>
-#include <sstream>
-#include <iomanip>
+#include <fstream>
 #include <ctime>
-#include <limits>
 
 using namespace std;
 
-struct FoodItem {
-    int id;
+// ================= FOOD ITEM CLASS =================
+
+class FoodItem {
+public:
     string name;
     int quantity;
+    int day, month, year;
     string donor;
-    string expiryDate;
-};
 
-time_t stringToDate(const string& date) {
-    tm tmDate = {};
+    FoodItem() {}
 
-    stringstream ss(date);
-    ss >> get_time(&tmDate, "%Y-%m-%d");
-
-    if (ss.fail()) {
-        return -1;
-    }
-
-    tmDate.tm_hour = 0;
-    tmDate.tm_min = 0;
-    tmDate.tm_sec = 0;
-
-    return mktime(&tmDate);
-}
-
-int daysBetween(time_t start, time_t end) {
-    double seconds = difftime(end, start);
-    return static_cast<int>(seconds / (60 * 60 * 24));
-}
-
-struct CompareExpiry {
-    bool operator()(const FoodItem& a, const FoodItem& b) {
-        return stringToDate(a.expiryDate) > stringToDate(b.expiryDate);
+    FoodItem(string n, int q, int d, int m, int y, string dn) {
+        name = n;
+        quantity = q;
+        day = d;
+        month = m;
+        year = y;
+        donor = dn;
     }
 };
 
-class InventoryManager {
-private:
-    vector<FoodItem> inventory;
+// ================= PRIORITY QUEUE COMPARATOR =================
+
+class CompareExpiry {
+public:
+    bool operator()(FoodItem a, FoodItem b) {
+
+        if (a.year != b.year)
+            return a.year > b.year;
+
+        if (a.month != b.month)
+            return a.month > b.month;
+
+        return a.day > b.day;
+    }
+};
+
+// ================= GLOBAL VARIABLES =================
+
+vector<FoodItem> inventory;
+
+priority_queue<FoodItem,
+               vector<FoodItem>,
+               CompareExpiry> expiryQueue;
+
+// ================= GET CURRENT DATE =================
+
+void getCurrentDate(int &d, int &m, int &y) {
+
+    time_t now = time(0);
+
+    tm *ltm = localtime(&now);
+
+    d = ltm->tm_mday;
+    m = 1 + ltm->tm_mon;
+    y = 1900 + ltm->tm_year;
+}
+
+// ================= DATE CONVERSION =================
+
+int convertToDays(int d, int m, int y) {
+
+    return y * 365 + m * 30 + d;
+}
+
+// ================= REMAINING DAYS =================
+
+int getRemainingDays(FoodItem item) {
+
+    int cd, cm, cy;
+
+    getCurrentDate(cd, cm, cy);
+
+    int currentDays = convertToDays(cd, cm, cy);
+
+    int expiryDays = convertToDays(item.day,
+                                   item.month,
+                                   item.year);
+
+    return expiryDays - currentDays;
+}
+
+// ================= ADD FOOD =================
+
+void addFood() {
+
+    string name, donor;
+    int quantity, d, m, y;
+
+    cin.ignore();
+
+    cout << "\nEnter Food Name: ";
+    getline(cin, name);
+
+    cout << "Enter Quantity: ";
+    cin >> quantity;
+
+    cout << "Enter Expiry Date (DD MM YYYY): ";
+    cin >> d >> m >> y;
+
+    cin.ignore();
+
+    cout << "Enter Donor Name: ";
+    getline(cin, donor);
+
+    FoodItem item(name,
+                  quantity,
+                  d,
+                  m,
+                  y,
+                  donor);
+
+    inventory.push_back(item);
+
+    expiryQueue.push(item);
+
+    cout << "\nFood Added Successfully!\n";
+}
+
+// ================= DISPLAY INVENTORY =================
+
+void displayInventory() {
+
+    if (inventory.empty()) {
+
+        cout << "\nInventory is Empty!\n";
+        return;
+    }
+
+    cout << "\n=========== FOOD INVENTORY ===========\n";
+
+    for (FoodItem item : inventory) {
+
+        int remaining = getRemainingDays(item);
+
+        cout << "\nFood Name : " << item.name;
+
+        cout << "\nQuantity  : " << item.quantity;
+
+        cout << "\nExpiry    : "
+             << item.day << "/"
+             << item.month << "/"
+             << item.year;
+
+        cout << "\nDonor     : " << item.donor;
+
+        if (remaining < 0) {
+
+            cout << "\nStatus    : EXPIRED";
+        }
+
+        else if (remaining == 0) {
+
+            cout << "\nStatus    : Expires TODAY";
+        }
+
+        else if (remaining <= 3) {
+
+            cout << "\nStatus    : Expiring Soon";
+        }
+
+        else {
+
+            cout << "\nStatus    : Safe";
+        }
+
+        cout << "\nRemaining : "
+             << remaining
+             << " day(s)\n";
+    }
+}
+
+// ================= GENERATE EXPIRY ALERTS =================
+
+void generateExpiryAlerts() {
+
+    if (expiryQueue.empty()) {
+
+        cout << "\nNo Food Items Available!\n";
+        return;
+    }
 
     priority_queue<FoodItem,
                    vector<FoodItem>,
-                   CompareExpiry> expiryQueue;
+                   CompareExpiry> tempQueue = expiryQueue;
 
-    int nextId = 1;
+    cout << "\n=========== EXPIRY ALERTS ===========\n";
 
-    void rebuildPriorityQueue() {
-        while (!expiryQueue.empty()) {
-            expiryQueue.pop();
+    bool found = false;
+
+    while (!tempQueue.empty()) {
+
+        FoodItem item = tempQueue.top();
+
+        tempQueue.pop();
+
+        int remaining = getRemainingDays(item);
+
+        if (remaining < 0) {
+
+            cout << "\n[EXPIRED] "
+                 << item.name
+                 << " expired "
+                 << abs(remaining)
+                 << " day(s) ago.";
+
+            found = true;
         }
 
-        for (const FoodItem& item : inventory) {
+        else if (remaining == 0) {
+
+            cout << "\n[URGENT] "
+                 << item.name
+                 << " expires TODAY.";
+
+            found = true;
+        }
+
+        else if (remaining <= 3) {
+
+            cout << "\n[WARNING] "
+                 << item.name
+                 << " expires in "
+                 << remaining
+                 << " day(s).";
+
+            found = true;
+        }
+    }
+
+    if (!found) {
+
+        cout << "\nNo expiry alerts.\n";
+    }
+}
+
+// ================= REMOVE EXPIRED ITEMS =================
+
+void removeExpiredItems() {
+
+    vector<FoodItem> updatedInventory;
+
+    while (!expiryQueue.empty())
+        expiryQueue.pop();
+
+    for (FoodItem item : inventory) {
+
+        int remaining = getRemainingDays(item);
+
+        if (remaining >= 0) {
+
+            updatedInventory.push_back(item);
+
             expiryQueue.push(item);
         }
     }
 
-public:
+    inventory = updatedInventory;
 
-    // Add Item
-    void addItem() {
-        FoodItem item;
-        item.id = nextId++;
+    cout << "\nExpired Items Removed Successfully!\n";
+}
 
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+// ================= SEARCH FOOD =================
 
-        cout << "Enter item name: ";
-        getline(cin, item.name);
+void searchFood() {
 
-        cout << "Enter quantity: ";
-        cin >> item.quantity;
+    cin.ignore();
 
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    string searchName;
 
-        cout << "Enter donor name: ";
-        getline(cin, item.donor);
+    cout << "\nEnter Food Name to Search: ";
 
-        cout << "Enter expiry date (YYYY-MM-DD): ";
-        getline(cin, item.expiryDate);
+    getline(cin, searchName);
 
-        if (stringToDate(item.expiryDate) == -1) {
-            cout << "Invalid date format. Item not added.\n";
-            return;
-        }
+    bool found = false;
 
-        inventory.push_back(item);
-        expiryQueue.push(item);
+    for (FoodItem item : inventory) {
 
-        cout << "Item added successfully!\n";
-    }
+        if (item.name == searchName) {
 
-    // View Inventory
-    void viewInventory() const {
-        if (inventory.empty()) {
-            cout << "Inventory is empty.\n";
-            return;
-        }
+            found = true;
 
-        cout << "\n========== Current Inventory ==========\n";
+            cout << "\nFood Found!\n";
 
-        cout << left
-             << setw(5)  << "ID"
-             << setw(20) << "Name"
-             << setw(10) << "Qty"
-             << setw(20) << "Donor"
-             << setw(15) << "Expiry Date"
-             << endl;
+            cout << "Quantity : "
+                 << item.quantity;
 
-        cout << string(70, '-') << endl;
+            cout << "\nExpiry : "
+                 << item.day << "/"
+                 << item.month << "/"
+                 << item.year;
 
-        for (const FoodItem& item : inventory) {
-            cout << left
-                 << setw(5)  << item.id
-                 << setw(20) << item.name
-                 << setw(10) << item.quantity
-                 << setw(20) << item.donor
-                 << setw(15) << item.expiryDate
+            cout << "\nRemaining Days : "
+                 << getRemainingDays(item)
                  << endl;
         }
     }
 
-    // Search Item
-    void searchItem() const {
+    if (!found) {
 
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-        string searchName;
-
-        cout << "Enter item name to search: ";
-        getline(cin, searchName);
-
-        bool found = false;
-
-        for (const FoodItem& item : inventory) {
-
-            if (item.name == searchName) {
-
-                cout << "\nItem Found:\n";
-
-                cout << "ID: " << item.id << endl;
-                cout << "Name: " << item.name << endl;
-                cout << "Quantity: " << item.quantity << endl;
-                cout << "Donor: " << item.donor << endl;
-                cout << "Expiry Date: " << item.expiryDate << endl;
-
-                found = true;
-            }
-        }
-
-        if (!found) {
-            cout << "Item not found.\n";
-        }
+        cout << "\nFood Item Not Found!\n";
     }
-
-    // Update Quantity
-    void updateQuantity() {
-        int id;
-
-        cout << "Enter item ID to update quantity: ";
-        cin >> id;
-
-        for (FoodItem& item : inventory) {
-
-            if (item.id == id) {
-
-                cout << "Enter new quantity: ";
-                cin >> item.quantity;
-
-                rebuildPriorityQueue();
-
-                cout << "Quantity updated successfully!\n";
-                return;
-            }
-        }
-
-        cout << "Item not found.\n";
-    }
-
-    // Remove Item
-    void removeItem() {
-
-        int id;
-
-        cout << "Enter item ID to remove: ";
-        cin >> id;
-
-        auto it = remove_if(
-            inventory.begin(),
-            inventory.end(),
-
-            [id](const FoodItem& item) {
-                return item.id == id;
-            }
-        );
-
-        if (it != inventory.end()) {
-
-            inventory.erase(it, inventory.end());
-
-            rebuildPriorityQueue();
-
-            cout << "Item removed successfully!\n";
-
-        } else {
-
-            cout << "Item not found.\n";
-        }
-    }
-
-    // Show Soon To Expire Items
-    void showSoonToExpireItems() {
-
-        int alertDays;
-
-        cout << "Enter number of days for expiry alert: ";
-        cin >> alertDays;
-
-        time_t now = time(nullptr);
-
-        tm* localTime = localtime(&now);
-
-        localTime->tm_hour = 0;
-        localTime->tm_min = 0;
-        localTime->tm_sec = 0;
-
-        time_t today = mktime(localTime);
-
-        priority_queue<FoodItem,
-                       vector<FoodItem>,
-                       CompareExpiry> tempQueue = expiryQueue;
-
-        bool found = false;
-
-        cout << "\n========== Soon-to-Expire Items ==========\n";
-
-        while (!tempQueue.empty()) {
-
-            FoodItem item = tempQueue.top();
-            tempQueue.pop();
-
-            time_t expiry = stringToDate(item.expiryDate);
-
-            int daysLeft = daysBetween(today, expiry);
-
-            if (daysLeft >= 0 && daysLeft <= alertDays) {
-
-                cout << "ID: " << item.id
-                     << " | Name: " << item.name
-                     << " | Quantity: " << item.quantity
-                     << " | Expiry Date: " << item.expiryDate
-                     << " | Days Left: " << daysLeft
-                     << endl;
-
-                found = true;
-            }
-        }
-
-        if (!found) {
-            cout << "No items expiring within "
-                 << alertDays
-                 << " days.\n";
-        }
-    }
-
-    // Remove Expired Items
-    void removeExpiredItems() {
-
-        time_t now = time(nullptr);
-
-        tm* localTime = localtime(&now);
-
-        localTime->tm_hour = 0;
-        localTime->tm_min = 0;
-        localTime->tm_sec = 0;
-
-        time_t today = mktime(localTime);
-
-        auto it = remove_if(
-            inventory.begin(),
-            inventory.end(),
-
-            [today](const FoodItem& item) {
-                return stringToDate(item.expiryDate) < today;
-            }
-        );
-
-        if (it != inventory.end()) {
-
-            inventory.erase(it, inventory.end());
-
-            rebuildPriorityQueue();
-
-            cout << "Expired items removed successfully.\n";
-
-        } else {
-
-            cout << "No expired items found.\n";
-        }
-    }
-};
-
-// Display Menu
-void displayMenu() {
-
-    cout << "\n========== Food Bank Inventory Management ==========\n";
-
-    cout << "1. Add Food Donation\n";
-    cout << "2. View Inventory\n";
-    cout << "3. Search Food Item\n";
-    cout << "4. Update Item Quantity\n";
-    cout << "5. Remove Item\n";
-    cout << "6. Show Soon-to-Expire Items\n";
-    cout << "7. Remove Expired Items\n";
-    cout << "8. Exit\n";
-
-    cout << "Enter your choice: ";
 }
 
-// Main Function
-int main() {
+// ================= SAVE DATA =================
 
-    InventoryManager manager;
+void saveToFile() {
+
+    ofstream file("inventory.txt");
+
+    for (FoodItem item : inventory) {
+
+        file << item.name << ","
+             << item.quantity << ","
+             << item.day << ","
+             << item.month << ","
+             << item.year << ","
+             << item.donor << endl;
+    }
+
+    file.close();
+
+    cout << "\nData Saved Successfully!\n";
+}
+
+// ================= LOAD DATA =================
+
+void loadFromFile() {
+
+    ifstream file("inventory.txt");
+
+    if (!file)
+        return;
+
+    inventory.clear();
+
+    while (!file.eof()) {
+
+        string name, donor;
+        int quantity, d, m, y;
+
+        getline(file, name, ',');
+
+        if (name == "")
+            break;
+
+        file >> quantity;
+        file.ignore();
+
+        file >> d;
+        file.ignore();
+
+        file >> m;
+        file.ignore();
+
+        file >> y;
+        file.ignore();
+
+        getline(file, donor);
+
+        FoodItem item(name,
+                      quantity,
+                      d,
+                      m,
+                      y,
+                      donor);
+
+        inventory.push_back(item);
+
+        expiryQueue.push(item);
+    }
+
+    file.close();
+}
+
+// ================= MENU =================
+
+void menu() {
 
     int choice;
 
     do {
 
-        displayMenu();
+        cout << "\n\n=========== FOOD BANK INVENTORY SYSTEM ===========\n";
+
+        cout << "1. Add Food Donation\n";
+        cout << "2. Display Inventory\n";
+        cout << "3. Generate Expiry Alerts\n";
+        cout << "4. Search Food Item\n";
+        cout << "5. Remove Expired Items\n";
+        cout << "6. Save Data\n";
+        cout << "7. Exit\n";
+
+        cout << "\nEnter Choice: ";
 
         cin >> choice;
 
         switch (choice) {
 
-            case 1:
-                manager.addItem();
-                break;
+        case 1:
+            addFood();
+            break;
 
-            case 2:
-                manager.viewInventory();
-                break;
+        case 2:
+            displayInventory();
+            break;
 
-            case 3:
-                manager.searchItem();
-                break;
+        case 3:
+            generateExpiryAlerts();
+            break;
 
-            case 4:
-                manager.updateQuantity();
-                break;
+        case 4:
+            searchFood();
+            break;
 
-            case 5:
-                manager.removeItem();
-                break;
+        case 5:
+            removeExpiredItems();
+            break;
 
-            case 6:
-                manager.showSoonToExpireItems();
-                break;
+        case 6:
+            saveToFile();
+            break;
 
-            case 7:
-                manager.removeExpiredItems();
-                break;
+        case 7:
+            saveToFile();
+            cout << "\nExiting Program...\n";
+            break;
 
-            case 8:
-                cout << "Exiting program. Thank you!\n";
-                break;
-
-            default:
-                cout << "Invalid choice. Please try again.\n";
+        default:
+            cout << "\nInvalid Choice!\n";
         }
 
-    } while (choice != 8);
+    } while (choice != 7);
+}
+
+// ================= MAIN FUNCTION =================
+
+int main() {
+
+    loadFromFile();
+
+    menu();
 
     return 0;
 }
