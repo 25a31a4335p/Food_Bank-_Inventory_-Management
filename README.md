@@ -1,89 +1,126 @@
 # 🍱 Food Bank Inventory Management System
 
-A C++ console-based application designed to help food banks manage food donations, track inventory, monitor expiry dates using priority queues, and generate alerts for soon-to-expire food items.
-
----
-
-## 📌 Project Overview
-
-Food banks receive many donations daily, and managing these items manually can be difficult. This project provides a simple inventory management system that allows users to:
-
-- ➕ Add donated food items
-- 📦 Store item quantity and expiry date
-- ⏳ Track items based on expiry date
-- 🚨 Generate alerts for soon-to-expire food
-- ❌ Remove expired or distributed items
-- 🔍 Search food items by name
-- ✏️ Update item quantity
-- 📋 Display current inventory
-
-The system uses a **Priority Queue** to prioritize food items that expire soonest. Tiny digital heroics against food wastage. Humanity occasionally gets something right. 🍞
+A simple console-based **Food Bank Inventory Management System** developed in **C++**. This project helps food banks and donation centers efficiently manage donated food items, track expiry dates, update stock quantities, and remove expired items before they become science experiments in storage. 🥫
 
 ---
 
 ## ✨ Features
 
-✅ Add new food donations  
-✅ View all inventory items  
-✅ Track expiry dates  
-✅ Alert users about soon-to-expire food  
-✅ Remove expired items  
-✅ Search food items by name  
-✅ Update item quantity  
-✅ Priority queue implementation for expiry tracking  
+- ➕ Add food donation details  
+- 📋 View complete inventory  
+- 🔍 Search food items by name  
+- ✏️ Update item quantity  
+- ❌ Remove food items from inventory  
+- ⏳ Display soon-to-expire food items  
+- 🚨 Remove expired food items automatically  
+- ⚡ Priority Queue implementation for expiry tracking  
+- 📅 Date handling using C++ time library  
 
 ---
 
 ## 🛠️ Technologies Used
 
 - 💻 C++
-- 📚 Standard Template Library (STL)
+- 📚 STL Vector
 - ⚡ Priority Queue
-- 🧩 Object-Oriented Programming (OOP)
-- 🖥️ Console-based Interface
+- 🔤 String Streams
+- 📅 Time Library
 
 ---
 
 ## 📂 Data Structures Used
 
-### ⚡ Priority Queue
-
-A priority queue is used to store food items according to their expiry dates.
-
-Items with the earliest expiry date have the highest priority, so they can be distributed first.
-
 ### 📦 Vector
+Stores all food items in the inventory.
 
-A vector is used to store the general inventory list.
+### ⚡ Priority Queue
+Tracks items based on expiry date for efficient alerts and management.
 
 ---
 
-## 📁 Project Structure
+## 📜 Menu Options
 
 ```text
-Food-Bank-Inventory-Management/
-│
-├── main.cpp
-├── README.md
-└── screenshots/
+1. Add Food Donation
+2. View Inventory
+3. Search Food Item
+4. Update Item Quantity
+5. Remove Item
+6. Show Soon-to-Expire Items
+7. Remove Expired Items
+8. Exit
 ```
+
+---
+
+## 🧪 Sample Input
+
+```text
+Enter item name: Rice
+Enter quantity: 50
+Enter donor name: ABC Foundation
+Enter expiry date (YYYY-MM-DD): 2026-06-20
+```
+
+---
+
+## 🖥️ Sample Output
+
+```text
+Item added successfully!
+
+Current Inventory:
+ID   Name                 Qty       Donor               Expiry Date
+----------------------------------------------------------------------
+1    Rice                 50        ABC Foundation      2026-06-20
+```
+
+---
+
+## ▶️ How to Run
+
+### 🔹 Compile the Program
+
+```bash
+g++ foodbank.cpp -o foodbank
+```
+
+### 🔹 Run the Program
+
+```bash
+./foodbank
+```
+
+Windows users, naturally, get to do things differently because operating systems enjoy drama:
+
+```bash
+foodbank.exe
+```
+
+---
+
+## 🎯 Project Objective
+
+The main objective of this project is to reduce food wastage and improve food distribution management by efficiently tracking donated food items and their expiry dates.
+
+---
+
+## 🚀 Future Enhancements
+
+- 💾 File handling for permanent data storage  
+- 🔐 Admin login system  
+- 🖼️ GUI version  
+- 🗄️ Database integration  
+- 📧 Automatic email/SMS expiry alerts  
 
 ---
 
 ## 👨‍💻 Team Members
 
-| Name |
-|------|
-| Sushmitha |
-| Sritha |
-| Spoorthi |
-| Sanjay |
-| Yashwanth |
+-  M. Sushmitha  
+-  B. Sritha  
+-  V. Spoorthi  
+-  K. Sanjay  
+-  K. Yashwanth  
 
----
-
-## 🎯 Objective
-
-The main objective of this project is to simplify food bank inventory management and reduce food wastage by ensuring food items are distributed before expiry.
-
-Because throwing away usable food while people go hungry is one of civilization’s more embarrassing side quests. 🌍🍱
+```
